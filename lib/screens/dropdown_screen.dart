@@ -1,4 +1,6 @@
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dropdown_demo_app/screens/show_selection_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../models/country.dart';
@@ -14,6 +16,7 @@ class DropdownScreen extends StatefulWidget {
 }
 
 class _DropdownScreenState extends State<DropdownScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Country? _selectedCountry;
   country_state.State? _selectedState;
 
@@ -29,6 +32,7 @@ class _DropdownScreenState extends State<DropdownScreen> {
     final stateProvider = Provider.of<StateProvider>(context);
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         elevation: 5,
         title: const Text('Country and State Dropdowns'),
@@ -40,55 +44,69 @@ class _DropdownScreenState extends State<DropdownScreen> {
           children: [
             countryProvider.loading
                 ? const Center(child: CircularProgressIndicator())
-                : DropdownButtonFormField<Country>(
-                    value: _selectedCountry,
-                    decoration: const InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(4.0))),
-                        hintText: 'Select a country'),
-                    onChanged: (Country? newValue) {
+                : CustomDropdown<Country>.search(
+                    hintText: 'Select Country',
+                    decoration: CustomDropdownDecoration(
+                        closedFillColor: Colors.purple.shade50),
+                    items: countryProvider.countries,
+                    excludeSelected: false,
+                    onChanged: (newValue) {
                       setState(() {
-                        _selectedCountry = newValue!;
+                        _selectedCountry = newValue;
                         _selectedState = null;
                         stateProvider.fetchStates(newValue);
                       });
-                    },
-                    items: countryProvider.countries
-                        .map<DropdownMenuItem<Country>>(
-                          (Country country) => DropdownMenuItem<Country>(
-                            value: country,
-                            child: Text(country.value),
-                          ),
-                        )
-                        .toList(),
-                  ),
+                    }),
             const SizedBox(height: 20),
-            _selectedCountry != null ? (countryProvider.loading || stateProvider.loading)
-                ? const Center(child: CircularProgressIndicator())
-                : DropdownButtonFormField<country_state.State>(
-                    value: _selectedState,
-                    decoration: const InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(4.0))),
-                        hintText: 'Select a state'),
-                    onChanged: (country_state.State? newValue) {
-                      setState(() {
-                        _selectedState = newValue!;
-                      });
-                    },
-                    items: stateProvider.states
-                        .map<DropdownMenuItem<country_state.State>>(
-                            (country_state.State state) =>
-                                DropdownMenuItem<country_state.State>(
-                                  value: state,
-                                  child: Text(state.value),
-                                ))
-                        .toList(),
-                  ) : const SizedBox.shrink()
+            _selectedCountry != null
+                ? (countryProvider.loading || stateProvider.loading)
+                    ? const Center(child: CircularProgressIndicator())
+                    : CustomDropdown<country_state.State>.search(
+                        hintText: 'Select State',
+                        decoration: CustomDropdownDecoration(
+                            closedFillColor: Colors.purple.shade50),
+                        items: stateProvider.states,
+                        excludeSelected: false,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedState = newValue;
+                          });
+                        })
+                : const SizedBox.shrink(),
+            const SizedBox(height: 100),
+            Center(
+                child: ElevatedButton(
+              onPressed: () {
+                if (_selectedCountry != null && _selectedState != null) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ShowSelectionScreen(
+                        selectedCountry: _selectedCountry!,
+                        selectedState: _selectedState!,
+                      ),
+                    ),
+                  );
+                } else {
+                  _showSnackBar('Please select both country and state.');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple.shade50,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10)),
+              child: const Text('Submit', style: TextStyle(fontSize: 17)),
+            )),
           ],
         ),
+      ),
+    );
+  }
+
+  // Function to show Snackbar
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

@@ -34,8 +34,11 @@ dependencies:
   #for API calls
   http: ^1.2.1
 
-  #for manage state
+  #to manage state
   provider: ^6.1.2
+
+  #for custom dropdown widget
+  animated_custom_dropdown: 3.0.0
 
   #To get the device info for api call header
   device_info_plus: ^10.1.0

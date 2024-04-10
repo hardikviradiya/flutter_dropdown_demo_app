@@ -10,4 +10,10 @@ class State {
       value: json['value'],
     );
   }
+
+  //To use the class as custom dropdown value
+  @override
+  String toString() {
+    return value;
+  }
 }
